@@ -15,10 +15,10 @@ from langchain_community.document_loaders import UnstructuredURLLoader
 load_dotenv()
 
 st.title("Yt video and Webpages summary")
-st.subheader("Link daal")
+st.subheader("Provid url for any Yt video or Webpage")
 
-groq_api_key = os.getenv("GROQ_API_KEY")
-api_key = os.getenv("OPENAI_API_KEY")
+groq_api_key = "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"
+# api_key = os.getenv("OPENAI_API_KEY")
 
 # llm = ChatOpenAI(model="GPT-4.1", base_url = "https://models.inference.ai.azure.com",api_key = api_key)
 llm = ChatGroq(model = "Gemma2-9b-It",groq_api_key = groq_api_key)
