@@ -11,14 +11,15 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_community.document_loaders import UnstructuredURLLoader
+from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
 
 load_dotenv()
 
 st.title("Yt video and Webpages summary")
-st.subheader("Provid url for any Yt video or Webpage")
+st.subheader("Link daal")
 
-groq_api_key = os.getenv("GROQ_API_KEY")
-# api_key = os.getenv("OPENAI_API_KEY")
+groq_api_key =os.getenv("GROQ_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 
 # llm = ChatOpenAI(model="GPT-4.1", base_url = "https://models.inference.ai.azure.com",api_key = api_key)
 llm = ChatGroq(model = "Gemma2-9b-It",groq_api_key = groq_api_key)
@@ -38,6 +39,8 @@ final_prompt_tem = PromptTemplate(template=final_prompt, input_variables=["text"
 
 url = st.text_input("Enter URL here")
 
+from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
+
 def get_transcript_from_url(youtube_url):
     try:
         parsed_url = urlparse(youtube_url)
@@ -50,17 +53,22 @@ def get_transcript_from_url(youtube_url):
         if not video_id:
             raise ValueError("Invalid YouTube URL format")
         
-        try: 
-            transcript = YouTubeTranscriptApi.get_transcript(video_id,languages=["hi"])
-        except:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
-
+        try:
+            # First try Hindi
+            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["hi"])
+        except NoTranscriptFound:
+            # If not found in Hindi, try generated
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            transcript = transcript_list.find_generated_transcript(['hi'])
+        except Exception as e:
+            raise RuntimeError(f"Transcript fetch failed: {e}")
 
         text = " ".join([t["text"] for t in transcript])
         return text
 
     except Exception as e:
         raise RuntimeError(f"Failed to get transcript: {e}")
+
 
 if st.button("Summarize Content"):
     if not url.strip():
