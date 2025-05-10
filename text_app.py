@@ -17,7 +17,7 @@ load_dotenv()
 st.title("Yt video and Webpages summary")
 st.subheader("Provid url for any Yt video or Webpage")
 
-groq_api_key = "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"
+groq_api_key = os.getenv("GROQ_API_KEY")
 # api_key = os.getenv("OPENAI_API_KEY")
 
 # llm = ChatOpenAI(model="GPT-4.1", base_url = "https://models.inference.ai.azure.com",api_key = api_key)
