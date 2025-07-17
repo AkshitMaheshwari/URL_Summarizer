@@ -45,29 +45,40 @@ def get_transcript_from_url(youtube_url):
     try:
         parsed_url = urlparse(youtube_url)
         video_id = ""
+
         if "youtube.com" in youtube_url:
             video_id = parse_qs(parsed_url.query).get("v", [""])[0]
         elif "youtu.be" in youtube_url:
             video_id = parsed_url.path.lstrip("/")
+        else:
+            raise ValueError("URL does not seem to be a valid YouTube link.")
 
         if not video_id:
-            raise ValueError("Invalid YouTube URL format")
-        
+            raise ValueError("Could not extract video ID from URL.")
+
+        # Try both languages
+        transcript = None
         try:
-            # First try Hindi
             transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["hi"])
         except NoTranscriptFound:
-            # If not found in Hindi, try generated
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-            transcript = transcript_list.find_generated_transcript(['hi'])
+            try:
+                transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
+            except NoTranscriptFound:
+                raise RuntimeError("No transcript found in Hindi or English.")
+        except TranscriptsDisabled:
+            raise RuntimeError("Transcripts are disabled for this video.")
         except Exception as e:
-            raise RuntimeError(f"Transcript fetch failed: {e}")
+            raise RuntimeError(f"Unexpected error while fetching transcript: {str(e)}")
+
+        if not transcript:
+            raise RuntimeError("Transcript data is empty or could not be fetched.")
 
         text = " ".join([t["text"] for t in transcript])
         return text
 
     except Exception as e:
-        raise RuntimeError(f"Failed to get transcript: {e}")
+        raise RuntimeError(f"Failed to get transcript: {str(e)}")
+
 
 
 if st.button("Summarize Content"):
