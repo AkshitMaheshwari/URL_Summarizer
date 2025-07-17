@@ -21,3 +21,7 @@ numexpr
 google-search-results
 defusedxml
 requests
+langchain_huggingface
+huggingface_hub
+sentence_transformers
+transformers
