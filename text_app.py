@@ -12,6 +12,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_community.document_loaders import UnstructuredURLLoader
 from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
+from youtube_transcript_api.proxies import WebshareProxyConfig
 
 load_dotenv()
 
@@ -43,6 +44,12 @@ from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFoun
 
 def get_transcript_from_url(youtube_url):
     try:
+        # ✅ Add proxy config here
+        proxy_config = WebshareProxyConfig(
+            proxy_username=os.getenv("WEBSHARE_PROXY_USERNAME"),
+            proxy_password=os.getenv("WEBSHARE_PROXY_PASSWORD")
+        )
+
         parsed_url = urlparse(youtube_url)
         video_id = ""
 
@@ -56,13 +63,13 @@ def get_transcript_from_url(youtube_url):
         if not video_id:
             raise ValueError("Could not extract video ID from URL.")
 
-        # Try both languages
+        # Fetch using proxy
         transcript = None
         try:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["hi"])
+            transcript = YouTubeTranscriptApi(proxy_config=proxy_config).get_transcript(video_id, languages=["hi"])
         except NoTranscriptFound:
             try:
-                transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
+                transcript = YouTubeTranscriptApi(proxy_config=proxy_config).get_transcript(video_id, languages=["en"])
             except NoTranscriptFound:
                 raise RuntimeError("No transcript found in Hindi or English.")
         except TranscriptsDisabled:
@@ -78,6 +85,7 @@ def get_transcript_from_url(youtube_url):
 
     except Exception as e:
         raise RuntimeError(f"Failed to get transcript: {str(e)}")
+
 
 
 
