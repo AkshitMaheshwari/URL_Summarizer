@@ -11,6 +11,7 @@ duckdb
 openai
 langchain-groq
 youtube_transcript_api==1.1.1
+validators
 unstructured
 pytube
 langchain_core
